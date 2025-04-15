@@ -10,15 +10,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery } from "@tanstack/react-query";
 
-export const AnimeGrid = () => {
+interface AnimeGridProps {
+  searchQuery?: string;
+  language?: string;
+}
+
+export const AnimeGrid = ({ searchQuery = "", language = "en" }: AnimeGridProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedAnime, setSelectedAnime] = useState<AnimeData | null>(null);
   const [totalPages, setTotalPages] = useState(0);
 
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const fetchAnimes = async (page: number) => {
     try {
+      // Build the API URL with search query if provided
+      let url = `https://api.jikan.moe/v4/anime?page=${page}`;
+      if (searchQuery) {
+        url += `&q=${encodeURIComponent(searchQuery)}`;
+      }
+      
       // Use rate limiting to avoid API throttling
-      const response = await axios.get<AnimeResponse>(`https://api.jikan.moe/v4/anime?page=${page}`);
+      const response = await axios.get<AnimeResponse>(url);
       setTotalPages(response.data.pagination.last_visible_page);
       return response.data.data;
     } catch (error) {
@@ -27,7 +43,7 @@ export const AnimeGrid = () => {
   };
 
   const { data: animes, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['animes', currentPage],
+    queryKey: ['animes', currentPage, searchQuery],
     queryFn: () => fetchAnimes(currentPage),
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -165,6 +181,26 @@ export const AnimeGrid = () => {
     );
   }
 
+  // Show message when no results are found
+  if (animes && animes.length === 0) {
+    return (
+      <Alert className="bg-blue-900/20 border-blue-900 text-blue-50">
+        <AlertDescription>
+          No anime found matching your search criteria. Try a different search term.
+          <div className="mt-4">
+            <Button 
+              onClick={() => refetch()} 
+              variant="outline" 
+              className="border-blue-500 text-blue-50 hover:bg-blue-900/20"
+            >
+              Try Again
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <>
       {renderPagination()}
@@ -175,6 +211,7 @@ export const AnimeGrid = () => {
             key={anime.mal_id} 
             anime={anime} 
             onViewDetails={handleViewDetails}
+            language={language}
           />
         ))}
       </div>
@@ -185,6 +222,7 @@ export const AnimeGrid = () => {
         <AnimeDetails 
           anime={selectedAnime} 
           onClose={handleCloseDetails} 
+          language={language}
         />
       )}
     </>

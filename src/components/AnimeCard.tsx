@@ -9,9 +9,10 @@ import { toast } from "sonner";
 interface AnimeCardProps {
   anime: AnimeData;
   onViewDetails: (anime: AnimeData) => void;
+  language?: string;
 }
 
-export const AnimeCard = ({ anime, onViewDetails }: AnimeCardProps) => {
+export const AnimeCard = ({ anime, onViewDetails, language = "en" }: AnimeCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadAnimeInfo = async () => {
@@ -34,12 +35,47 @@ export const AnimeCard = ({ anime, onViewDetails }: AnimeCardProps) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success("Download complete!");
+      const successMessage = language === "en" ? "Download complete!" : 
+                            language === "ja" ? "ダウンロード完了!" :
+                            language === "fr" ? "Téléchargement terminé!" :
+                            language === "de" ? "Download abgeschlossen!" :
+                            "¡Descarga completa!";
+      
+      toast.success(successMessage);
     } catch (error) {
-      toast.error("Failed to download anime information");
+      const errorMessage = language === "en" ? "Failed to download anime information" : 
+                          language === "ja" ? "アニメ情報のダウンロードに失敗しました" :
+                          language === "fr" ? "Échec du téléchargement des informations sur l'anime" :
+                          language === "de" ? "Fehler beim Herunterladen der Anime-Informationen" :
+                          "Error al descargar información de anime";
+      
+      toast.error(errorMessage);
       console.error("Download error:", error);
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  // Get button text based on language
+  const getViewDetailsText = () => {
+    switch(language) {
+      case "ja": return "詳細を見る";
+      case "fr": return "Voir détails";
+      case "de": return "Details anzeigen";
+      case "es": return "Ver detalles";
+      default: return "View Details";
+    }
+  };
+
+  const getDownloadText = () => {
+    if (isDownloading) return "...";
+    
+    switch(language) {
+      case "ja": return "JSON";
+      case "fr": return "JSON";
+      case "de": return "JSON";
+      case "es": return "JSON";
+      default: return "JSON";
     }
   };
 
@@ -55,8 +91,18 @@ export const AnimeCard = ({ anime, onViewDetails }: AnimeCardProps) => {
       <CardContent className="p-4">
         <h3 className="text-white font-semibold text-lg truncate mb-2">{anime.title}</h3>
         <div className="flex justify-between text-sm">
-          <span className="text-[#0EA5E9]">Episodes: {anime.episodes || "N/A"}</span>
-          <span className="text-[#8B5CF6]">Rating: {anime.score || "N/A"}</span>
+          <span className="text-[#0EA5E9]">
+            {language === "en" ? "Episodes" : 
+             language === "ja" ? "エピソード" :
+             language === "fr" ? "Épisodes" :
+             language === "de" ? "Folgen" : "Episodios"}: {anime.episodes || "N/A"}
+          </span>
+          <span className="text-[#8B5CF6]">
+            {language === "en" ? "Rating" : 
+             language === "ja" ? "評価" :
+             language === "fr" ? "Note" :
+             language === "de" ? "Bewertung" : "Calificación"}: {anime.score || "N/A"}
+          </span>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between p-4 pt-0">
@@ -65,7 +111,7 @@ export const AnimeCard = ({ anime, onViewDetails }: AnimeCardProps) => {
           className="text-white border-white hover:bg-[#323232]"
           onClick={() => onViewDetails(anime)}
         >
-          View Details
+          {getViewDetailsText()}
         </Button>
         <Button
           variant="outline"
@@ -74,7 +120,7 @@ export const AnimeCard = ({ anime, onViewDetails }: AnimeCardProps) => {
           disabled={isDownloading}
         >
           <Download className="h-4 w-4 mr-1" />
-          {isDownloading ? "..." : "JSON"}
+          {getDownloadText()}
         </Button>
       </CardFooter>
     </Card>

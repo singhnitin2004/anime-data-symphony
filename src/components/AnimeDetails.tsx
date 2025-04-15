@@ -8,9 +8,10 @@ import { toast } from "sonner";
 interface AnimeDetailsProps {
   anime: AnimeData;
   onClose: () => void;
+  language?: string;
 }
 
-export const AnimeDetails = ({ anime, onClose }: AnimeDetailsProps) => {
+export const AnimeDetails = ({ anime, onClose, language = "en" }: AnimeDetailsProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadAnimeInfo = async () => {
@@ -33,13 +34,117 @@ export const AnimeDetails = ({ anime, onClose }: AnimeDetailsProps) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success("Download complete!");
+      const successMessage = language === "en" ? "Download complete!" : 
+                             language === "ja" ? "ダウンロード完了!" :
+                             language === "fr" ? "Téléchargement terminé!" :
+                             language === "de" ? "Download abgeschlossen!" :
+                             "¡Descarga completa!";
+      
+      toast.success(successMessage);
     } catch (error) {
-      toast.error("Failed to download anime information");
+      const errorMessage = language === "en" ? "Failed to download anime information" : 
+                           language === "ja" ? "アニメ情報のダウンロードに失敗しました" :
+                           language === "fr" ? "Échec du téléchargement des informations sur l'anime" :
+                           language === "de" ? "Fehler beim Herunterladen der Anime-Informationen" :
+                           "Error al descargar información de anime";
+      
+      toast.error(errorMessage);
       console.error("Download error:", error);
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  // Translate section titles based on language
+  const getTranslation = (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      synopsis: {
+        en: "Synopsis",
+        ja: "あらすじ",
+        fr: "Synopsis",
+        de: "Zusammenfassung",
+        es: "Sinopsis"
+      },
+      episodes: {
+        en: "Episodes",
+        ja: "エピソード",
+        fr: "Épisodes",
+        de: "Folgen",
+        es: "Episodios"
+      },
+      score: {
+        en: "Score",
+        ja: "スコア",
+        fr: "Score",
+        de: "Punktzahl",
+        es: "Puntuación"
+      },
+      year: {
+        en: "Year",
+        ja: "年",
+        fr: "Année",
+        de: "Jahr",
+        es: "Año"
+      },
+      status: {
+        en: "Status",
+        ja: "状態",
+        fr: "Statut",
+        de: "Status",
+        es: "Estado"
+      },
+      genres: {
+        en: "Genres",
+        ja: "ジャンル",
+        fr: "Genres",
+        de: "Genres",
+        es: "Géneros"
+      },
+      rating: {
+        en: "Rating",
+        ja: "評価",
+        fr: "Évaluation",
+        de: "Bewertung",
+        es: "Clasificación"
+      },
+      aired: {
+        en: "Aired",
+        ja: "放送日",
+        fr: "Diffusé",
+        de: "Ausgestrahlt",
+        es: "Emitido"
+      },
+      duration: {
+        en: "Duration",
+        ja: "期間",
+        fr: "Durée",
+        de: "Dauer",
+        es: "Duración"
+      },
+      download: {
+        en: "Download Info (JSON)",
+        ja: "情報をダウンロード (JSON)",
+        fr: "Télécharger info (JSON)",
+        de: "Info herunterladen (JSON)",
+        es: "Descargar info (JSON)"
+      },
+      downloading: {
+        en: "Downloading...",
+        ja: "ダウンロード中...",
+        fr: "Téléchargement...",
+        de: "Wird heruntergeladen...",
+        es: "Descargando..."
+      },
+      noSynopsis: {
+        en: "No synopsis available.",
+        ja: "あらすじは利用できません。",
+        fr: "Aucun synopsis disponible.",
+        de: "Keine Zusammenfassung verfügbar.",
+        es: "No hay sinopsis disponible."
+      }
+    };
+
+    return translations[key][language] || translations[key]["en"];
   };
 
   return (
@@ -62,24 +167,24 @@ export const AnimeDetails = ({ anime, onClose }: AnimeDetailsProps) => {
             
             <div className="mt-4 space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-400">Episodes:</span>
+                <span className="text-gray-400">{getTranslation("episodes")}:</span>
                 <span className="text-white">{anime.episodes || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Score:</span>
+                <span className="text-gray-400">{getTranslation("score")}:</span>
                 <span className="text-white">{anime.score || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Year:</span>
+                <span className="text-gray-400">{getTranslation("year")}:</span>
                 <span className="text-white">{anime.year || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Status:</span>
+                <span className="text-gray-400">{getTranslation("status")}:</span>
                 <span className="text-white">{anime.status || "N/A"}</span>
               </div>
               {anime.genres && (
                 <div>
-                  <span className="text-gray-400">Genres:</span>
+                  <span className="text-gray-400">{getTranslation("genres")}:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {anime.genres.map(genre => (
                       <span key={genre.mal_id} className="bg-[#323232] text-white text-xs px-2 py-1 rounded">
@@ -97,24 +202,24 @@ export const AnimeDetails = ({ anime, onClose }: AnimeDetailsProps) => {
               disabled={isDownloading}
             >
               <Download className="h-4 w-4 mr-2" />
-              {isDownloading ? "Downloading..." : "Download Info (JSON)"}
+              {isDownloading ? getTranslation("downloading") : getTranslation("download")}
             </Button>
           </div>
           
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-white mb-3">Synopsis</h3>
-            <p className="text-gray-300 whitespace-pre-line">{anime.synopsis || "No synopsis available."}</p>
+            <h3 className="text-xl font-semibold text-white mb-3">{getTranslation("synopsis")}</h3>
+            <p className="text-gray-300 whitespace-pre-line">{anime.synopsis || getTranslation("noSynopsis")}</p>
             
             <div className="mt-6 space-y-4">
               {anime.rating && (
                 <div>
-                  <h4 className="text-lg font-medium text-white">Rating</h4>
+                  <h4 className="text-lg font-medium text-white">{getTranslation("rating")}</h4>
                   <p className="text-gray-300">{anime.rating}</p>
                 </div>
               )}
               {anime.aired && (
                 <div>
-                  <h4 className="text-lg font-medium text-white">Aired</h4>
+                  <h4 className="text-lg font-medium text-white">{getTranslation("aired")}</h4>
                   <p className="text-gray-300">
                     {`${new Date(anime.aired.from).toLocaleDateString()} to ${
                       anime.aired.to ? new Date(anime.aired.to).toLocaleDateString() : "?"
@@ -124,7 +229,7 @@ export const AnimeDetails = ({ anime, onClose }: AnimeDetailsProps) => {
               )}
               {anime.duration && (
                 <div>
-                  <h4 className="text-lg font-medium text-white">Duration</h4>
+                  <h4 className="text-lg font-medium text-white">{getTranslation("duration")}</h4>
                   <p className="text-gray-300">{anime.duration}</p>
                 </div>
               )}
